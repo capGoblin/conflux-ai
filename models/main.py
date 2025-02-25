@@ -165,9 +165,12 @@ def upload_model_weights(file_path: str, server_url="http://localhost:3000") -> 
 
 def main():
     # Configuration
-    days = 90  # 3 months of data
+    days = 365  # 1 year of data
     sequence_length = 10
     epochs = 30
+    
+    # Create data directory if it doesn't exist
+    os.makedirs('data', exist_ok=True)
     
     # Initialize data processor
     dp = DataProcessor()
@@ -207,6 +210,10 @@ def main():
     y_train = torch.FloatTensor(y_train).reshape(-1, 1)
     X_test = torch.FloatTensor(X_test_scaled)
     y_test = torch.FloatTensor(y_test).reshape(-1, 1)
+    
+    # Save X_test tensor for trading agent
+    torch.save(X_test, 'data/X_test.pt')
+    print(f"Test data saved to data/X_test.pt")
     
     # Train and evaluate model for each trader
     trader_models = {}
@@ -278,5 +285,23 @@ def main():
         print(f"Incorrect predictions: {incorrect_predictions}")
         print(f"Accuracy: {(correct_predictions / len(y_test)) * 100:.2f}%")
     
+    # After evaluating models for each trader
+    contributions = {}
+
+    for trader_name, metrics in trader_performances.items():
+        contributions[trader_name] = metrics['accuracy']  # Use accuracy as a measure of contribution
+
+    # Normalize contributions to sum to 10
+    contribution_sum = sum(contributions.values())
+    contributions_normalized = {k: (v / contribution_sum) * 10 for k, v in contributions.items()}
+
+    # Create DataFrame for contributions
+    contribution_df = pd.DataFrame(list(contributions_normalized.items()), columns=['Trader Strategy', 'Contribution'])
+
+    # Save contributions to CSV
+    contribution_csv_path = 'data/trader_contributions.csv'
+    contribution_df.to_csv(contribution_csv_path, index=False)
+    print(f"Trader contributions saved to {contribution_csv_path}")
+
 if __name__ == "__main__":
     main() 
