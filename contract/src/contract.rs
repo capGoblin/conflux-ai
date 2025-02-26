@@ -1,9 +1,9 @@
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
+    entry_point, DepsMut, Env, MessageInfo, Response, StdError,
 };
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, ContributionResponse};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{config, config_read, State};
 
 #[entry_point]
@@ -20,7 +20,8 @@ pub fn instantiate(
 
     config(deps.storage).save(&state)?;
 
-    deps.api.debug(&format!("Contract was initialized by {}", info.sender));
+    deps.api
+        .debug(&format!("Contract was initialized by {}", info.sender));
 
     Ok(Response::default())
 }
@@ -28,28 +29,39 @@ pub fn instantiate(
 #[entry_point]
 pub fn execute(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Deposit { amount } => try_deposit(deps, info, amount),
         ExecuteMsg::RecordContribution { score } => try_record_contribution(deps, info, score),
-        ExecuteMsg::RecordFinalPortfolioValue { final_value } => try_record_final_portfolio_value(deps, info, final_value),
+        ExecuteMsg::RecordFinalPortfolioValue { final_value } => {
+            try_record_final_portfolio_value(deps, info, final_value)
+        }
         ExecuteMsg::DistributeProfit {} => try_distribute_profit(deps, info),
     }
 }
 
 // Function to handle deposits
-pub fn try_deposit(deps: DepsMut, info: MessageInfo, amount: u128) -> Result<Response, ContractError> {
+pub fn try_deposit(
+    deps: DepsMut,
+    info: MessageInfo,
+    amount: u128,
+) -> Result<Response, ContractError> {
     // Load the current state
-    let mut state = config_read(deps.storage).load().map_err(ContractError::StdError)?;
+    let state = config_read(deps.storage)
+        .load()
+        .map_err(ContractError::StdError)?;
 
     // Update the total deposit amount
+    let mut state = state;
     state.total_deposit += amount;
 
     // Save the updated state
-    config(deps.storage).save(&state).map_err(ContractError::StdError)?;
+    config(deps.storage)
+        .save(&state)
+        .map_err(ContractError::StdError)?;
 
     // Log the deposit action
     Ok(Response::new()
@@ -59,14 +71,22 @@ pub fn try_deposit(deps: DepsMut, info: MessageInfo, amount: u128) -> Result<Res
 }
 
 // Function to record contribution scores
-pub fn try_record_contribution(deps: DepsMut, info: MessageInfo, score: u8) -> Result<Response, ContractError> {
+pub fn try_record_contribution(
+    deps: DepsMut,
+    info: MessageInfo,
+    score: u8,
+) -> Result<Response, ContractError> {
     // Validate the score
     if score > 10 {
-        return Err(ContractError::InvalidInput("Score must be between 0 and 10".to_string()));
+        return Err(ContractError::InvalidInput(
+            "Score must be between 0 and 10".to_string(),
+        ));
     }
 
     // Load the current state
-    let mut state = config_read(deps.storage).load().map_err(ContractError::StdError)?;
+    let _state = config_read(deps.storage)
+        .load()
+        .map_err(ContractError::StdError)?;
 
     // Here you would typically store the score in a mapping (not shown in state)
     // For now, we will just log the action
@@ -80,12 +100,15 @@ pub fn try_record_contribution(deps: DepsMut, info: MessageInfo, score: u8) -> R
 }
 
 // Function to record the final portfolio value
-pub fn try_record_final_portfolio_value(deps: DepsMut, info: MessageInfo, final_value: u128) -> Result<Response, ContractError> {
+pub fn try_record_final_portfolio_value(
+    deps: DepsMut,
+    _info: MessageInfo,
+    final_value: u128,
+) -> Result<Response, ContractError> {
     // Load the current state
-    let mut state = config_read(deps.storage).load().map_err(ContractError::StdError)?;
-
-    // Here you would typically store the final portfolio value in the state
-    // For now, we will just log the action
+    let _state = config_read(deps.storage)
+        .load()
+        .map_err(ContractError::StdError)?;
 
     // Log the final portfolio value action
     Ok(Response::new()
@@ -94,9 +117,11 @@ pub fn try_record_final_portfolio_value(deps: DepsMut, info: MessageInfo, final_
 }
 
 // Function to distribute profits
-pub fn try_distribute_profit(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+pub fn try_distribute_profit(deps: DepsMut, _info: MessageInfo) -> Result<Response, ContractError> {
     // Load the current state
-    let state = config_read(deps.storage).load().map_err(ContractError::StdError)?;
+    let _state = config_read(deps.storage)
+        .load()
+        .map_err(ContractError::StdError)?;
 
     // Logic to calculate and distribute profits based on contributions
     // This is a placeholder for the actual distribution logic
