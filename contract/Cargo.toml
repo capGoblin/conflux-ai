@@ -3,7 +3,7 @@ name = "conflux-ai"
 version = "0.1.0"
 authors = ["capGoblin"]
 edition = "2021"
-description = "A conflux ai contract"
+description = "A conflux-ai contract"
 license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -31,9 +31,15 @@ backtraces = ["cosmwasm-std/backtraces"]
 [dependencies]
 cosmwasm-std = { package = "secret-cosmwasm-std", version = "1.1.10" }
 cosmwasm-storage = { package = "secret-cosmwasm-storage", version = "1.1.10" }
-cw-storage-plus = "0.10" # Add this line
 schemars = { version = "0.8.11" }
 serde = { version = "1.0" }
 thiserror = { version = "1.0" }
 cosmwasm-schema = "1.0.0"
 secret-toolkit-storage = "0.9.0"
+secret-toolkit = { version = "0.10.0", default-features = false, features = [
+    "utils",
+    "storage",
+    "serialization",
+    "viewing-key",
+    "permit",
+] }

@@ -1,10 +1,11 @@
 use cosmwasm_std::{
-    entry_point, DepsMut, Env, MessageInfo, Response, StdError,
+    entry_point, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError,
+    StdResult,
 };
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{config, config_read, State};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, RaffleNumberResponse};
+use crate::state::{config, config_read, State, SCORES};
 
 #[entry_point]
 pub fn instantiate(
@@ -15,7 +16,8 @@ pub fn instantiate(
 ) -> Result<Response, StdError> {
     let state = State {
         total_deposit: msg.total_deposit,
-        // Initialize other state variables as needed
+        owner: info.sender.clone(),
+        total_profit: 0,
     };
 
     config(deps.storage).save(&state)?;
@@ -29,104 +31,125 @@ pub fn instantiate(
 #[entry_point]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
+    env: Env,
+    _info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Deposit { amount } => try_deposit(deps, info, amount),
-        ExecuteMsg::RecordContribution { score } => try_record_contribution(deps, info, score),
-        ExecuteMsg::RecordFinalPortfolioValue { final_value } => {
-            try_record_final_portfolio_value(deps, info, final_value)
+        ExecuteMsg::Deposit { amount } => try_deposit(deps, env, amount),
+        ExecuteMsg::RecordContribution { sender, score } => {
+            try_record_contribution(deps, env, sender, score)
         }
-        ExecuteMsg::DistributeProfit {} => try_distribute_profit(deps, info),
+        ExecuteMsg::DistributeProfit {} => distribute_profit(deps, env),
+        ExecuteMsg::RecordTotalProfit { total_profit } => {
+            record_total_profit(deps, env, total_profit)
+        }
     }
 }
 
-// Function to handle deposits
-pub fn try_deposit(
-    deps: DepsMut,
-    info: MessageInfo,
-    amount: u128,
-) -> Result<Response, ContractError> {
-    // Load the current state
-    let state = config_read(deps.storage)
-        .load()
-        .map_err(ContractError::StdError)?;
+pub fn try_deposit(deps: DepsMut, _env: Env, amount: u32) -> Result<Response, ContractError> {
+    config(deps.storage).update(|mut state| -> Result<_, ContractError> {
+        state.total_deposit += amount;
+        Ok(state)
+    })?;
 
-    // Update the total deposit amount
-    let mut state = state;
-    state.total_deposit += amount;
-
-    // Save the updated state
-    config(deps.storage)
-        .save(&state)
-        .map_err(ContractError::StdError)?;
-
-    // Log the deposit action
+    deps.api.debug(&format!("You deposited: {}", amount));
     Ok(Response::new()
         .add_attribute("action", "deposit")
-        .add_attribute("trader", info.sender)
         .add_attribute("amount", amount.to_string()))
 }
 
-// Function to record contribution scores
 pub fn try_record_contribution(
     deps: DepsMut,
-    info: MessageInfo,
-    score: u8,
+    _env: Env,
+    sender: Addr,
+    score: u32,
 ) -> Result<Response, ContractError> {
-    // Validate the score
     if score > 10 {
-        return Err(ContractError::InvalidInput(
-            "Score must be between 0 and 10".to_string(),
-        ));
+        return Err(ContractError::CustomError {
+            val: "Score must be between 0 and 10".to_string(),
+        });
     }
 
-    // Load the current state
-    let _state = config_read(deps.storage)
-        .load()
-        .map_err(ContractError::StdError)?;
+    SCORES.insert(deps.storage, &sender.to_string(), &score)?;
 
-    // Here you would typically store the score in a mapping (not shown in state)
-    // For now, we will just log the action
-    // You may want to implement a mapping for trader contributions in the state
-
-    // Log the contribution action
+    deps.api
+        .debug(&format!("Score recorded for {}: {}", sender, score));
     Ok(Response::new()
         .add_attribute("action", "record_contribution")
-        .add_attribute("trader", info.sender)
+        .add_attribute("sender", sender.to_string())
         .add_attribute("score", score.to_string()))
 }
 
-// Function to record the final portfolio value
-pub fn try_record_final_portfolio_value(
-    deps: DepsMut,
-    _info: MessageInfo,
-    final_value: u128,
-) -> Result<Response, ContractError> {
-    // Load the current state
-    let _state = config_read(deps.storage)
-        .load()
-        .map_err(ContractError::StdError)?;
+pub fn distribute_profit(deps: DepsMut, _env: Env) -> Result<Response, ContractError> {
+    let state = config(deps.storage).load()?;
+    let total_profit = state.total_profit;
 
-    // Log the final portfolio value action
+    let mut total_score: u32 = 0;
+    let mut distribution: Vec<u32> = Vec::new();
+
+    // Extract KeyIter from Result, handle error if necessary
+    let key_iter_result = SCORES.iter_keys(deps.storage);
+
+    // Calculate total scores
+    for key in key_iter_result? {
+        let key = key?; // Unwrap the key
+        let score = SCORES.get(deps.storage, &key).unwrap_or(0); // Get the score for the sender
+        total_score += score;
+    }
+
+    // Calculate each user's share
+    let key_iter_result = SCORES.iter_keys(deps.storage);
+    for key in key_iter_result? {
+        let key = key?; // Unwrap the key
+        let score = SCORES.get(deps.storage, &key).unwrap_or(0); // Get the score for the sender
+        let share = if total_score > 0 {
+            (score * total_profit) / total_score // Calculate profit share
+        } else {
+            0 // No scores, no distribution
+        };
+        distribution.push(share); // Push the share directly into the Vec<u32>
+    }
+
+    // Log the distribution for debugging
+    for (i, share) in distribution.iter().enumerate() {
+        deps.api
+            .debug(&format!("User {} will receive: {}", i, share));
+    }
+
+    // Return the distribution as a response
     Ok(Response::new()
-        .add_attribute("action", "record_final_portfolio_value")
-        .add_attribute("final_value", final_value.to_string()))
+        .add_attribute("action", "distribute_profit")
+        .add_attribute("distribution", format!("{:?}", distribution)))
 }
 
-// Function to distribute profits
-pub fn try_distribute_profit(deps: DepsMut, _info: MessageInfo) -> Result<Response, ContractError> {
-    // Load the current state
-    let _state = config_read(deps.storage)
-        .load()
-        .map_err(ContractError::StdError)?;
+pub fn record_total_profit(
+    deps: DepsMut,
+    _env: Env,
+    total_profit: u32,
+) -> Result<Response, ContractError> {
+    config(deps.storage).update(|mut state| -> Result<_, ContractError> {
+        state.total_profit = total_profit; // Update the total profit
+        Ok(state)
+    })?;
 
-    // Logic to calculate and distribute profits based on contributions
-    // This is a placeholder for the actual distribution logic
-    // You would typically iterate over trader contributions and calculate their share
+    deps.api
+        .debug(&format!("Total profit recorded: {}", total_profit));
+    Ok(Response::new()
+        .add_attribute("action", "record_total_profit")
+        .add_attribute("total_profit", total_profit.to_string()))
+}
 
-    // Log the profit distribution action
-    Ok(Response::new().add_attribute("action", "distribute_profit"))
+#[entry_point]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetRaffleNumber {} => to_binary(&query_raffle_number(deps)?),
+    }
+}
+
+fn query_raffle_number(deps: Deps) -> StdResult<RaffleNumberResponse> {
+    let state = config_read(deps.storage).load()?;
+    Ok(RaffleNumberResponse {
+        total_deposit: state.total_deposit,
+    })
 }
