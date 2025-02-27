@@ -1,5 +1,8 @@
 # Build results
-/target
+target/*
+target/debug/*
+target/release/*
+target/wasm32-unknown-unknown/*
 Cargo.lock
 contract.wasm*
 contract.wasm.gz*

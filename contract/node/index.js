@@ -6,10 +6,10 @@ import * as fs from "fs";
 const wallet = new Wallet("radar injury pond there dad trick language ritual domain supreme tell ring");
 
 const contract_wasm = fs.readFileSync("../conflux-ai.wasm.gz");
-const codeId = 13527;
+const codeId = 13528;
 const contractCodeHash =
-  "69075ff23edb71f84aaf5c4ed6978cac74f2d925f8c989d9f2f7f5a2e924146f";
-const contractAddress = "secret1s6e6n70kx5gkl8trs5edpp26atjfy4zy5e6hlh";
+  "fb03059edf20e964d1ee08ab38283458b7a99fb770a5ce24a5135f36fe96d818";
+const contractAddress = "secret1z8f0da82mgv5rfrt3xamqqylyrpc3yypxuyg9z";
 
 const secretjs = new SecretNetworkClient({
   chainId: "pulsar-3",
@@ -47,7 +47,7 @@ let upload_contract = async () => {
 };
 
 let instantiate_contract = async (codeId, contractCodeHash) => {
-  const initMsg = { total_deposit: 1 };
+  const initMsg = { total_deposit: 0 };
   let tx = await secretjs.tx.compute.instantiateContract(
     {
       code_id: codeId,
@@ -69,14 +69,14 @@ let instantiate_contract = async (codeId, contractCodeHash) => {
   return contractAddress;
 };
 
-let try_deposit = async (contractAddress, contractCodeHash) => {
+let handle_deposit = async (contractAddress, contractCodeHash, amount) => {
   const tx = await secretjs.tx.compute.executeContract(
     {
       sender: wallet.address,
       contract_address: contractAddress,
       msg: {
         deposit: {
-          amount: 50,
+          amount: amount,
         },
       },
       code_hash: contractCodeHash,
@@ -87,18 +87,7 @@ let try_deposit = async (contractAddress, contractCodeHash) => {
   console.log(tx);
 };
 
-let query_spin = async (contractAddress, contractCodeHash) => {
-  let tx = await secretjs.query.compute.queryContract({
-    contract_address: contractAddress,
-    code_hash: contractCodeHash,
-    query: {
-      get_raffle_number: {},
-    },
-  });
-  console.log(tx);
-};
-
-let try_record_contribution = async (contractAddress, contractCodeHash) => {
+let handle_record_contribution = async (contractAddress, contractCodeHash) => {
   const tx = await secretjs.tx.compute.executeContract(
     {
       sender: wallet.address,
@@ -117,7 +106,7 @@ let try_record_contribution = async (contractAddress, contractCodeHash) => {
   console.log(tx);
 };
 
-let try_distribute_profit = async (contractAddress, contractCodeHash) => {
+let handle_distribute_profit = async (contractAddress, contractCodeHash) => {
   const tx = await secretjs.tx.compute.executeContract(
     {
       sender: wallet.address,
@@ -133,7 +122,7 @@ let try_distribute_profit = async (contractAddress, contractCodeHash) => {
   console.log(tx);
 };
 
-let try_record_total_profit = async (contractAddress, contractCodeHash, totalProfit) => {
+let handle_record_total_profit = async (contractAddress, contractCodeHash, totalProfit) => {
   const tx = await secretjs.tx.compute.executeContract(
     {
       sender: wallet.address,
@@ -156,12 +145,12 @@ const main = async () => {
   try {
     const { codeId, contractCodeHash } = await upload_contract();
     const contractAddress = await instantiate_contract(codeId, contractCodeHash);
-    await try_record_contribution(contractAddress, contractCodeHash);
+    await handle_record_contribution(contractAddress, contractCodeHash);
 
     // Example total profit to distribute
     const totalProfit = 1000; // Set this to the actual profit you want to distribute
-    await try_record_total_profit(contractAddress, contractCodeHash, totalProfit);
-    await try_distribute_profit(contractAddress, contractCodeHash);
+    await handle_record_total_profit(contractAddress, contractCodeHash, totalProfit);
+    await handle_distribute_profit(contractAddress, contractCodeHash);
   } catch (error) {
     console.error("Error occurred:", error);
   }

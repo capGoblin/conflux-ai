@@ -35,7 +35,7 @@ build-mainnet-reproducible:
 		--mount type=volume,source="$$(basename "$$(pwd)")_cache",target=/code/target \
 		--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
 		mr7uca/wasm-contract-optimizer:0.0.10
-	mv ./optimized-wasm/*.wasm.gz ./secret-raffle.wasm.gz
+	mv ./optimized-wasm/*.wasm.gz ./conflux-ai.wasm.gz
 
 .PHONY: compress-wasm
 compress-wasm:

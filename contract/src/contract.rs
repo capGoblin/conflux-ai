@@ -4,7 +4,7 @@ use cosmwasm_std::{
 };
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, RaffleNumberResponse};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{config, config_read, State, SCORES};
 
 #[entry_point]
@@ -36,18 +36,18 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Deposit { amount } => try_deposit(deps, env, amount),
+        ExecuteMsg::Deposit { amount } => handle_deposit(deps, env, amount),
         ExecuteMsg::RecordContribution { sender, score } => {
-            try_record_contribution(deps, env, sender, score)
+            handle_record_contribution(deps, env, sender, score)
         }
-        ExecuteMsg::DistributeProfit {} => distribute_profit(deps, env),
+        ExecuteMsg::DistributeProfit {} => handle_distribute_profit(deps, env),
         ExecuteMsg::RecordTotalProfit { total_profit } => {
-            record_total_profit(deps, env, total_profit)
+            handle_record_total_profit(deps, env, total_profit)
         }
     }
 }
 
-pub fn try_deposit(deps: DepsMut, _env: Env, amount: u32) -> Result<Response, ContractError> {
+pub fn handle_deposit(deps: DepsMut, _env: Env, amount: u32) -> Result<Response, ContractError> {
     config(deps.storage).update(|mut state| -> Result<_, ContractError> {
         state.total_deposit += amount;
         Ok(state)
@@ -59,7 +59,7 @@ pub fn try_deposit(deps: DepsMut, _env: Env, amount: u32) -> Result<Response, Co
         .add_attribute("amount", amount.to_string()))
 }
 
-pub fn try_record_contribution(
+pub fn handle_record_contribution(
     deps: DepsMut,
     _env: Env,
     sender: Addr,
@@ -81,7 +81,7 @@ pub fn try_record_contribution(
         .add_attribute("score", score.to_string()))
 }
 
-pub fn distribute_profit(deps: DepsMut, _env: Env) -> Result<Response, ContractError> {
+pub fn handle_distribute_profit(deps: DepsMut, _env: Env) -> Result<Response, ContractError> {
     let state = config(deps.storage).load()?;
     let total_profit = state.total_profit;
 
@@ -123,7 +123,7 @@ pub fn distribute_profit(deps: DepsMut, _env: Env) -> Result<Response, ContractE
         .add_attribute("distribution", format!("{:?}", distribution)))
 }
 
-pub fn record_total_profit(
+pub fn handle_record_total_profit(
     deps: DepsMut,
     _env: Env,
     total_profit: u32,
@@ -143,13 +143,11 @@ pub fn record_total_profit(
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetRaffleNumber {} => to_binary(&query_raffle_number(deps)?),
+        QueryMsg::GetTotalDeposit {} => to_binary(&query_total_deposit(deps)?),
     }
 }
 
-fn query_raffle_number(deps: Deps) -> StdResult<RaffleNumberResponse> {
+fn query_total_deposit(deps: Deps) -> StdResult<u32> {
     let state = config_read(deps.storage).load()?;
-    Ok(RaffleNumberResponse {
-        total_deposit: state.total_deposit,
-    })
+    Ok(state.total_deposit)
 }
