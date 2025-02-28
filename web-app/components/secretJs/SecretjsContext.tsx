@@ -59,7 +59,7 @@ const SecretjsContextProvider = ({ children }: { children: ReactNode }) => {
       walletAddress: secretAddress,
       encryptionUtils: window.getEnigmaUtils(SECRET_CHAIN_ID),
     });
-    
+
     console.log(secretjs);
 
     setSecretAddress(secretAddress);

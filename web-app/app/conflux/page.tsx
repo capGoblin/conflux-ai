@@ -48,6 +48,7 @@ export default function ConfluxAI() {
   const [amount, setAmount] = useState(0);
   const [contributionScore, setContributionScore] = useState(0);
   const [withdrawAmount, setWithdrawAmount] = useState(0);
+  const [logs, setLogs] = useState<string[]>([]);
 
   const handleUpdate = async () => {
     await handle_set_global_model_cid(cid);
@@ -71,10 +72,32 @@ export default function ConfluxAI() {
     setWithdrawAmount(distributedAmount);
   };
 
+  const fetchLogs = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/logs"); // Ensure this matches your Flask server URL
+      const data = await response.json();
+      setLogs(data);
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+    }
+  };
+
   useEffect(() => {
     fetchContributionScore();
     fetchWithdrawAmount();
+    const interval = setInterval(() => {
+      fetchLogs();
+    }, 1000); // Fetch logs every second
+
+    return () => {
+      clearInterval(interval); // Cleanup on unmount
+    };
   }, [secretAddress]);
+
+  useEffect(() => {
+    fetchLogs();
+    console.log("Current logs length:", logs.length); // Log the length of logs
+  }, []);
 
   return (
     <div className="flex h-screen bg-black text-zinc-100 overflow-hidden">
@@ -217,7 +240,7 @@ export default function ConfluxAI() {
                     <CardTitle className="text-zinc-100">AI Agent</CardTitle>
                   </CardHeader>
                   <CardContent className="h-[300px]">
-                    <AgentChat />
+                    <AgentChat logs={logs} />
                   </CardContent>
                 </Card>
               </div>
@@ -278,7 +301,7 @@ export default function ConfluxAI() {
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <AgentChat />
+          <AgentChat logs={logs} />
         </div>
       </div>
     </div>
