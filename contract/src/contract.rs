@@ -18,6 +18,7 @@ pub fn instantiate(
         total_deposit: msg.total_deposit,
         owner: info.sender.clone(),
         total_profit: 0,
+        global_model_cid: String::new(),
     };
 
     config(deps.storage).save(&state)?;
@@ -44,6 +45,7 @@ pub fn execute(
         ExecuteMsg::RecordTotalProfit { total_profit } => {
             handle_record_total_profit(deps, env, total_profit)
         }
+        ExecuteMsg::SetGlobalModelCID { cid } => handle_set_global_model_cid(deps, env, cid),
     }
 }
 
@@ -140,14 +142,36 @@ pub fn handle_record_total_profit(
         .add_attribute("total_profit", total_profit.to_string()))
 }
 
+pub fn handle_set_global_model_cid(
+    deps: DepsMut,
+    _env: Env,
+    cid: String,
+) -> Result<Response, ContractError> {
+    let cid_ref = cid.clone(); // Clone the String to get a reference
+    config(deps.storage).update(|mut state| -> Result<_, ContractError> {
+        state.global_model_cid = cid_ref.clone(); // Set the global_model_cid
+        Ok(state)
+    })?;
+
+    Ok(Response::new()
+        .add_attribute("action", "set_global_model_cid")
+        .add_attribute("global_model_cid", &cid_ref)) // Use reference here
+}
+
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetTotalDeposit {} => to_binary(&query_total_deposit(deps)?),
+        QueryMsg::GetGlobalModelCID {} => to_binary(&query_global_model_cid(deps)?),
     }
 }
 
 fn query_total_deposit(deps: Deps) -> StdResult<u32> {
     let state = config_read(deps.storage).load()?;
     Ok(state.total_deposit)
+}
+
+pub fn query_global_model_cid(deps: Deps) -> StdResult<String> {
+    let state = config_read(deps.storage).load()?;
+    Ok(state.global_model_cid)
 }

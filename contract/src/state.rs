@@ -13,6 +13,7 @@ pub struct State {
     pub total_deposit: u32,
     pub owner: Addr,
     pub total_profit: u32,
+    pub global_model_cid: String,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<State> {

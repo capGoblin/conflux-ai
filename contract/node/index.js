@@ -6,10 +6,10 @@ import * as fs from "fs";
 const wallet = new Wallet("radar injury pond there dad trick language ritual domain supreme tell ring");
 
 const contract_wasm = fs.readFileSync("../conflux-ai.wasm.gz");
-const codeId = 13528;
+const codeId = 13542;
 const contractCodeHash =
-  "fb03059edf20e964d1ee08ab38283458b7a99fb770a5ce24a5135f36fe96d818";
-const contractAddress = "secret1z8f0da82mgv5rfrt3xamqqylyrpc3yypxuyg9z";
+  "9c31e69958e91eb285b2009220d6c3808c70f68a3b994e7cba07300772233b4d";
+const contractAddress = "secret1c9qtyavp5yw3rmad9wyeuhj8mtnv2h7qycqru5";
 
 const secretjs = new SecretNetworkClient({
   chainId: "pulsar-3",
@@ -140,17 +140,48 @@ let handle_record_total_profit = async (contractAddress, contractCodeHash, total
   console.log(tx);
 };
 
+let handle_set_global_model_cid = async (contractAddress, contractCodeHash, cid) => {
+  const tx = await secretjs.tx.compute.executeContract(
+    {
+      sender: wallet.address,
+      contract_address: contractAddress,
+      msg: {
+        set_global_model_c_i_d: {
+          cid: cid,
+        },
+      },
+      code_hash: contractCodeHash,
+    },
+    { gasLimit: 100_000 }
+  );
+
+  console.log(tx);
+};
+
+let handle_query_global_model_cid = async (contractAddress, contractCodeHash) => {
+  let tx = await secretjs.query.compute.queryContract({
+    contract_address: contractAddress,
+    code_hash: contractCodeHash,
+    query: {
+      get_global_model_c_i_d: {},
+    },
+  });
+  console.log(tx);
+};
+
 // Main function to run all tasks sequentially
 const main = async () => {
   try {
-    const { codeId, contractCodeHash } = await upload_contract();
-    const contractAddress = await instantiate_contract(codeId, contractCodeHash);
-    await handle_record_contribution(contractAddress, contractCodeHash);
+    // const { codeId, contractCodeHash } = await upload_contract();
+    // const contractAddress = await instantiate_contract(codeId, contractCodeHash);
+    // await handle_set_global_model_cid(contractAddress, contractCodeHash, "example_cid");
+    await handle_query_global_model_cid(contractAddress, contractCodeHash);
+    // await handle_record_contribution(contractAddress, contractCodeHash);
 
     // Example total profit to distribute
     const totalProfit = 1000; // Set this to the actual profit you want to distribute
-    await handle_record_total_profit(contractAddress, contractCodeHash, totalProfit);
-    await handle_distribute_profit(contractAddress, contractCodeHash);
+    // await handle_record_total_profit(contractAddress, contractCodeHash, totalProfit);
+    // await handle_distribute_profit(contractAddress, contractCodeHash);
   } catch (error) {
     console.error("Error occurred:", error);
   }
