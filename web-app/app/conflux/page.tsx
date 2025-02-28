@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import ConfluxHeader from "@/components/conflux/header";
 import AgentChat from "@/components/conflux/agent-chat";
@@ -27,8 +29,53 @@ import {
   ArrowUp,
   AlertCircle,
 } from "lucide-react";
+import { useContext, useState, useEffect } from "react";
+import { SecretjsFunctions } from "@/components/secretJs/SecretjsFunctions";
+import { SecretjsContext } from "@/components/secretJs/SecretjsContext";
+import { toast } from "react-hot-toast";
 
 export default function ConfluxAI() {
+  const {
+    handle_set_global_model_cid,
+    handle_deposit,
+    handle_query_contribution_score,
+    handle_query_profit_distribution,
+  } = SecretjsFunctions();
+  const { secretAddress } = useContext(SecretjsContext) || {
+    secretAddress: "",
+  };
+  const [cid, setCid] = useState("");
+  const [amount, setAmount] = useState(0);
+  const [contributionScore, setContributionScore] = useState(0);
+  const [withdrawAmount, setWithdrawAmount] = useState(0);
+
+  const handleUpdate = async () => {
+    await handle_set_global_model_cid(cid);
+    console.log("Global model CID updated successfully!");
+    toast.success("Global model CID updated successfully!");
+  };
+
+  const handleDeposit = async () => {
+    await handle_deposit(amount);
+    toast.success("Deposit successful!");
+  };
+
+  const fetchContributionScore = async () => {
+    const score = await handle_query_contribution_score();
+    console.log(score);
+    setContributionScore(Number(score) * 10); // Scale to 100
+  };
+
+  const fetchWithdrawAmount = async () => {
+    const distributedAmount = await handle_query_profit_distribution();
+    setWithdrawAmount(distributedAmount);
+  };
+
+  useEffect(() => {
+    fetchContributionScore();
+    fetchWithdrawAmount();
+  }, [secretAddress]);
+
   return (
     <div className="flex h-screen bg-black text-zinc-100 overflow-hidden">
       {/* Main Content */}
@@ -52,23 +99,29 @@ export default function ConfluxAI() {
                     </div>
                   </div>
                   <CardDescription className="text-zinc-400">
-                    Connect to the global trading model with your unique ID
+                    Update the global trading model with AutoDrive CID
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-16">
                   <div className="space-y-2">
                     <div className="relative">
                       <Input
-                        placeholder="Paste your global model ID"
+                        placeholder="Paste global model CID"
+                        value={cid}
+                        onChange={(e) => setCid(e.target.value)}
                         className="bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-indigo-500 focus:ring-indigo-500 h-12"
                       />
-                      <Button className="absolute right-1 top-1 bg-indigo-600 hover:bg-indigo-700 h-10">
-                        Connect
+                      <Button
+                        className="absolute right-1 top-1 bg-indigo-600 hover:bg-indigo-700 h-10"
+                        onClick={handleUpdate}
+                      >
+                        Update
                       </Button>
                     </div>
                     <p className="text-xs text-zinc-500 flex items-center">
                       <AlertCircle className="h-3 w-3 mr-1" />
-                      Your model ID remains private and never leaves your device
+                      Your model weights remain private and never leave your
+                      device
                     </p>
                   </div>
 
@@ -76,11 +129,11 @@ export default function ConfluxAI() {
                     <div className="flex justify-between items-center">
                       <span className="text-zinc-400">Contribution Score</span>
                       <span className="text-2xl font-bold text-indigo-400">
-                        76.4%
+                        {contributionScore}%
                       </span>
                     </div>
                     <Progress
-                      value={76.4}
+                      value={contributionScore}
                       className="h-2 bg-zinc-800"
                       // indicatorClassName="bg-indigo-500"
                     />
@@ -103,21 +156,26 @@ export default function ConfluxAI() {
                             <Input
                               type="number"
                               placeholder="0.00"
+                              value={amount}
+                              onChange={(e) =>
+                                setAmount(Number(e.target.value))
+                              }
                               className="bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-indigo-500 focus:ring-indigo-500"
                             />
                           </div>
                           <Select>
                             <SelectTrigger className="w-[120px] bg-zinc-900 border-zinc-800 text-zinc-100">
-                              <SelectValue placeholder="ETH" />
+                              <SelectValue placeholder="SCRT" />
                             </SelectTrigger>
                             <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
-                              <SelectItem value="eth">ETH</SelectItem>
-                              <SelectItem value="btc">BTC</SelectItem>
-                              <SelectItem value="usdt">USDT</SelectItem>
+                              <SelectItem value="scrt">SCRT</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
-                        <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Button
+                          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                          onClick={handleDeposit}
+                        >
                           Deposit
                         </Button>
                       </div>
@@ -132,7 +190,7 @@ export default function ConfluxAI() {
                             Withdrawal
                           </div>
                           <div className="text-xs text-zinc-500">
-                            Based on contribution score
+                            Based on your contribution score
                           </div>
                         </div>
                         <div className="flex justify-between items-center">
@@ -140,7 +198,7 @@ export default function ConfluxAI() {
                             Available profit:
                           </span>
                           <span className="text-xl font-semibold text-indigo-400">
-                            0.37 ETH
+                            {withdrawAmount} SCRT
                           </span>
                         </div>
                         <Button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white">

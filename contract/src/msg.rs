@@ -22,4 +22,6 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     GetTotalDeposit {},
     GetGlobalModelCID {},
+    GetContributionScore { sender: Addr },
+    GetProfitDistribution {},
 }

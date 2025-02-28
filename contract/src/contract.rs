@@ -84,7 +84,7 @@ pub fn handle_record_contribution(
 }
 
 pub fn handle_distribute_profit(deps: DepsMut, _env: Env) -> Result<Response, ContractError> {
-    let state = config(deps.storage).load()?;
+    let state: State = config(deps.storage).load()?;
     let total_profit = state.total_profit;
 
     let mut total_score: u32 = 0;
@@ -163,6 +163,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetTotalDeposit {} => to_binary(&query_total_deposit(deps)?),
         QueryMsg::GetGlobalModelCID {} => to_binary(&query_global_model_cid(deps)?),
+        QueryMsg::GetContributionScore { sender } => {
+            to_binary(&query_contribution_score(deps, sender)?)
+        }
+        QueryMsg::GetProfitDistribution {} => to_binary(&query_distribute_profit(deps)?),
     }
 }
 
@@ -174,4 +178,42 @@ fn query_total_deposit(deps: Deps) -> StdResult<u32> {
 pub fn query_global_model_cid(deps: Deps) -> StdResult<String> {
     let state = config_read(deps.storage).load()?;
     Ok(state.global_model_cid)
+}
+
+pub fn query_contribution_score(deps: Deps, sender: Addr) -> StdResult<u32> {
+    let score = SCORES.get(deps.storage, &sender.to_string()).unwrap_or(0); // Get the score for the sender
+    Ok(score)
+}
+
+pub fn query_distribute_profit(deps: Deps) -> StdResult<Vec<u32>> {
+    let state = config_read(deps.storage).load()?;
+    let total_profit = state.total_profit;
+
+    let mut total_score: u32 = 0;
+    let mut distribution: Vec<u32> = Vec::new();
+
+    // Extract KeyIter from Result, handle error if necessary
+    let key_iter_result = SCORES.iter_keys(deps.storage);
+
+    // Calculate total scores
+    for key in key_iter_result? {
+        let key = key?; // Unwrap the key
+        let score = SCORES.get(deps.storage, &key).unwrap_or(0); // Get the score for the sender
+        total_score += score;
+    }
+
+    // Calculate each user's share
+    let key_iter_result = SCORES.iter_keys(deps.storage);
+    for key in key_iter_result? {
+        let key = key?; // Unwrap the key
+        let score = SCORES.get(deps.storage, &key).unwrap_or(0); // Get the score for the sender
+        let share = if total_score > 0 {
+            (score * total_profit) / total_score // Calculate profit share
+        } else {
+            0 // No scores, no distribution
+        };
+        distribution.push(share); // Push the share directly into the Vec<u32>
+    }
+
+    Ok(distribution) // Return the distribution as a vector
 }

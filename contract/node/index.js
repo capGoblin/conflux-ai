@@ -6,10 +6,10 @@ import * as fs from "fs";
 const wallet = new Wallet("radar injury pond there dad trick language ritual domain supreme tell ring");
 
 const contract_wasm = fs.readFileSync("../conflux-ai.wasm.gz");
-const codeId = 13542;
+const codeId = 13545;
 const contractCodeHash =
-  "9c31e69958e91eb285b2009220d6c3808c70f68a3b994e7cba07300772233b4d";
-const contractAddress = "secret1c9qtyavp5yw3rmad9wyeuhj8mtnv2h7qycqru5";
+  "11f591e2f9cebdc743915c1e92be82a9b256d527a31a914fc807063fa111c0c5";
+const contractAddress = "secret1pp09uck74e4cskkmgmy02zrzzaqfrya85ad4e6";
 
 const secretjs = new SecretNetworkClient({
   chainId: "pulsar-3",
@@ -87,15 +87,15 @@ let handle_deposit = async (contractAddress, contractCodeHash, amount) => {
   console.log(tx);
 };
 
-let handle_record_contribution = async (contractAddress, contractCodeHash) => {
+let handle_record_contribution = async (contractAddress, contractCodeHash, score) => {
   const tx = await secretjs.tx.compute.executeContract(
     {
       sender: wallet.address,
       contract_address: contractAddress,
       msg: {
         record_contribution: {
-          sender: wallet.address,
-          score: 2,
+          sender: "secret1q42qnccxnrgnuy9ge92xs5kuyvxr4gweaa896c",
+          score: score,
         },
       },
       code_hash: contractCodeHash,
@@ -169,15 +169,50 @@ let handle_query_global_model_cid = async (contractAddress, contractCodeHash) =>
   console.log(tx);
 };
 
+let handle_query_contribution_score = async (contractAddress, contractCodeHash, sender) => {
+  let tx = await secretjs.query.compute.queryContract({
+    contract_address: contractAddress,
+    code_hash: contractCodeHash,
+    query: {
+      get_contribution_score: {
+        sender: sender,
+      },
+    },
+  });
+  console.log(tx);
+};
+
+let handle_query_profit_distribution = async (contractAddress, contractCodeHash) => {
+  let tx = await secretjs.query.compute.queryContract({
+    contract_address: contractAddress,
+    code_hash: contractCodeHash,
+    query: {
+      get_profit_distribution: {},
+    },
+  });
+  console.log(tx);
+};
+
+let handle_query_total_deposit = async (contractAddress, contractCodeHash) => {
+  let tx = await secretjs.query.compute.queryContract({
+    contract_address: contractAddress,
+    code_hash: contractCodeHash,
+    query: {
+      get_total_deposit: {},
+    },
+  });
+  console.log(tx);
+};
+
 // Main function to run all tasks sequentially
 const main = async () => {
   try {
     // const { codeId, contractCodeHash } = await upload_contract();
     // const contractAddress = await instantiate_contract(codeId, contractCodeHash);
     // await handle_set_global_model_cid(contractAddress, contractCodeHash, "example_cid");
-    await handle_query_global_model_cid(contractAddress, contractCodeHash);
-    // await handle_record_contribution(contractAddress, contractCodeHash);
-
+    // await handle_query_global_model_cid(contractAddress, contractCodeHash);
+    // await handle_query_profit_distribution(contractAddress, contractCodeHash);
+    // await handle_query_contribution_score(contractAddress, contractCodeHash, wallet.address);
     // Example total profit to distribute
     const totalProfit = 1000; // Set this to the actual profit you want to distribute
     // await handle_record_total_profit(contractAddress, contractCodeHash, totalProfit);

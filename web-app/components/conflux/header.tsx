@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Wallet, ChevronDown, ExternalLink } from "lucide-react";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,15 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { SecretjsContext } from "../secretJs/SecretjsContext";
 
 export default function ConfluxHeader() {
-  const { connectWallet, secretAddress } = useContext(SecretjsContext);
   const [isConnected, setIsConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState("");
 
-  const handleConnectWallet = async () => {
-    await connectWallet();
+  const connectWallet = () => {
+    // Simulate wallet connection
     setIsConnected(true);
+    setWalletAddress("0x7F5E...8A4D");
   };
 
   return (
@@ -44,7 +44,7 @@ export default function ConfluxHeader() {
                 className="border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 hover:text-white"
               >
                 <Wallet className="mr-2 h-4 w-4 text-indigo-400" />
-                {secretAddress}
+                {walletAddress}
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -62,7 +62,7 @@ export default function ConfluxHeader() {
           </DropdownMenu>
         ) : (
           <Button
-            onClick={handleConnectWallet}
+            onClick={connectWallet}
             className="bg-indigo-600 hover:bg-indigo-700 text-white"
           >
             <Wallet className="mr-2 h-4 w-4" />

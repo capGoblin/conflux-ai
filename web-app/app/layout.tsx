@@ -1,7 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from "@/components/theme-provider";
 import { SecretjsContextProvider } from "../components/secretJs/SecretjsContext";
 
