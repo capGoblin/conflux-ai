@@ -6,10 +6,10 @@ import * as fs from "fs";
 const wallet = new Wallet("radar injury pond there dad trick language ritual domain supreme tell ring");
 
 const contract_wasm = fs.readFileSync("../conflux-ai.wasm.gz");
-const codeId = 13545;
+const codeId = 13546;
 const contractCodeHash =
   "11f591e2f9cebdc743915c1e92be82a9b256d527a31a914fc807063fa111c0c5";
-const contractAddress = "secret1pp09uck74e4cskkmgmy02zrzzaqfrya85ad4e6";
+const contractAddress = "secret15hfa4y3skxyc0kpy9hy0m3gwlvhcv7ftet9ctq";
 
 const secretjs = new SecretNetworkClient({
   chainId: "pulsar-3",
@@ -211,11 +211,11 @@ const main = async () => {
     // const contractAddress = await instantiate_contract(codeId, contractCodeHash);
     // await handle_set_global_model_cid(contractAddress, contractCodeHash, "example_cid");
     // await handle_query_global_model_cid(contractAddress, contractCodeHash);
-    // await handle_query_profit_distribution(contractAddress, contractCodeHash);
+    await handle_query_profit_distribution(contractAddress, contractCodeHash);
     // await handle_query_contribution_score(contractAddress, contractCodeHash, wallet.address);
     // Example total profit to distribute
     const totalProfit = 1000; // Set this to the actual profit you want to distribute
-    // await handle_record_total_profit(contractAddress, contractCodeHash, totalProfit);
+    await handle_record_total_profit(contractAddress, contractCodeHash, totalProfit);
     // await handle_distribute_profit(contractAddress, contractCodeHash);
   } catch (error) {
     console.error("Error occurred:", error);

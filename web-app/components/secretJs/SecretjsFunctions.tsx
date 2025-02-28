@@ -5,7 +5,7 @@ import { SecretNetworkClient } from "secretjs";
 
 const contractCodeHash =
   "11f591e2f9cebdc743915c1e92be82a9b256d527a31a914fc807063fa111c0c5";
-const contractAddress = "secret1pp09uck74e4cskkmgmy02zrzzaqfrya85ad4e6";
+const contractAddress = "secret15hfa4y3skxyc0kpy9hy0m3gwlvhcv7ftet9ctq";
 
 const SecretjsFunctions = () => {
   const { secretAddress } = useContext(SecretjsContext) || {

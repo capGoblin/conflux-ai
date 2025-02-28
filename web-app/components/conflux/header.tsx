@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Wallet, ChevronDown, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,15 +12,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { SecretjsContext } from "../secretJs/SecretjsContext";
 
 export default function ConfluxHeader() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState("");
+  const { connectWallet, disconnectWallet, secretAddress } = useContext(
+    SecretjsContext
+  ) || {
+    connectWallet: async () => {},
+    disconnectWallet: () => {},
+    secretAddress: "",
+  };
+  const isConnected = !!secretAddress;
 
-  const connectWallet = () => {
-    // Simulate wallet connection
-    setIsConnected(true);
-    setWalletAddress("0x7F5E...8A4D");
+  const handleConnectWallet = async () => {
+    await connectWallet();
+  };
+
+  const handleDisconnectWallet = async () => {
+    disconnectWallet();
+    // Optionally, you can add a success message or handle errors here
   };
 
   return (
@@ -44,7 +54,7 @@ export default function ConfluxHeader() {
                 className="border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 hover:text-white"
               >
                 <Wallet className="mr-2 h-4 w-4 text-indigo-400" />
-                {walletAddress}
+                {secretAddress}
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -55,14 +65,17 @@ export default function ConfluxHeader() {
                 <ExternalLink className="mr-2 h-4 w-4" />
                 <span>View on Explorer</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-zinc-800 cursor-pointer text-red-400">
+              <DropdownMenuItem
+                className="hover:bg-zinc-800 cursor-pointer text-red-400"
+                onClick={handleDisconnectWallet}
+              >
                 Disconnect
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
           <Button
-            onClick={connectWallet}
+            onClick={handleConnectWallet}
             className="bg-indigo-600 hover:bg-indigo-700 text-white"
           >
             <Wallet className="mr-2 h-4 w-4" />

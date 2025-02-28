@@ -7,19 +7,28 @@ declare global {
   }
 }
 
-import { createContext, useState } from "react";
+import { createContext, useState, ReactNode } from "react";
 import { SecretNetworkClient } from "secretjs";
 
-const SecretjsContext = createContext(null);
+const SecretjsContext = createContext<{
+  secretjs: SecretNetworkClient | null;
+  secretAddress: string;
+  connectWallet: () => Promise<void>;
+  disconnectWallet: () => void;
+} | null>(null);
 const SECRET_CHAIN_ID = "pulsar-3";
 const SECRET_LCD = "https://pulsar.lcd.secretnodes.com";
 
-const SecretjsContextProvider = ({ children }) => {
-  const [secretjs, setSecretjs] = useState(null);
-  const [secretAddress, setSecretAddress] = useState("");
+const SecretjsContextProvider = ({ children }: { children: ReactNode }) => {
+  const [secretjs, setSecretjs] = useState<SecretNetworkClient | null>(null);
+  const [secretAddress, setSecretAddress] = useState<string>("");
 
-  async function setupKeplr(setSecretjs, setSecretAddress) {
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  async function setupKeplr(
+    setSecretjs: (client: SecretNetworkClient | null) => void,
+    setSecretAddress: (address: string) => void
+  ) {
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
 
     while (
       !window.keplr ||
@@ -42,7 +51,7 @@ const SecretjsContextProvider = ({ children }) => {
     const accounts = await keplrOfflineSigner.getAccounts();
 
     const secretAddress = accounts[0].address;
-
+    console.log(secretAddress);
     const secretjs = new SecretNetworkClient({
       url: SECRET_LCD,
       chainId: SECRET_CHAIN_ID,
@@ -50,6 +59,8 @@ const SecretjsContextProvider = ({ children }) => {
       walletAddress: secretAddress,
       encryptionUtils: window.getEnigmaUtils(SECRET_CHAIN_ID),
     });
+    
+    console.log(secretjs);
 
     setSecretAddress(secretAddress);
     setSecretjs(secretjs);
@@ -58,10 +69,11 @@ const SecretjsContextProvider = ({ children }) => {
   async function connectWallet() {
     try {
       if (!window.keplr) {
-        console.log("intall keplr!");
+        console.log("install keplr!");
       } else {
         await setupKeplr(setSecretjs, setSecretAddress);
-        localStorage.setItem("keplrAutoConnect", "true");
+        console.log("connected");
+        // localStorage.setItem("keplrAutoConnect", "true");
         console.log(secretAddress);
       }
     } catch (error) {
@@ -72,14 +84,9 @@ const SecretjsContextProvider = ({ children }) => {
   }
 
   function disconnectWallet() {
-    // reset secretjs and secretAddress
     setSecretAddress("");
     setSecretjs(null);
-
-    // disable auto connect
     localStorage.setItem("keplrAutoConnect", "false");
-
-    // console.log for success
     console.log("Wallet disconnected!");
   }
 
@@ -87,9 +94,7 @@ const SecretjsContextProvider = ({ children }) => {
     <SecretjsContext.Provider
       value={{
         secretjs,
-        setSecretjs,
         secretAddress,
-        setSecretAddress,
         connectWallet,
         disconnectWallet,
       }}

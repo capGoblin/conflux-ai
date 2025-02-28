@@ -112,7 +112,6 @@ def generate_training_data(df: pd.DataFrame) -> tuple[Dict, Dict]:
     all_trader_performances = {}
     
     for trader_name, trader_class in trader_types.items():
-        print(f"\nBacktesting for {trader_name}...")
         try:
             trades, performance = backtest_trader(
                 trader_class, 
@@ -121,13 +120,11 @@ def generate_training_data(df: pd.DataFrame) -> tuple[Dict, Dict]:
             )
             all_trades[trader_name] = trades
             all_trader_performances[trader_name] = performance
-            print(f"Generated {len(trades)} trades for {trader_name}")
             
             # Calculate trader's performance
             initial_value = 100000
             final_value = performance['portfolio_value'].iloc[-1]
             total_return = ((final_value - initial_value) / initial_value) * 100
-            print(f"Trader Return: {total_return:.2f}%")
             
         except Exception as e:
             print(f"Error backtesting {trader_name}: {e}")
@@ -182,13 +179,11 @@ def main():
     # Save raw data
     raw_data_path = 'data/bitcoin_raw_data.csv'
     df.to_csv(raw_data_path, index=False)
-    print(f"Raw data saved to {raw_data_path}")
     
     # Add indicators and save processed data
     df = dp.add_indicators(df)
     processed_data_path = 'data/bitcoin_processed_data.csv'
     df.to_csv(processed_data_path, index=False)
-    print(f"Processed data with indicators saved to {processed_data_path}")
     
     # Generate training data from multiple traders
     print("\nGenerating training data from multiple traders...")
@@ -213,18 +208,17 @@ def main():
     
     # Save X_test tensor for trading agent
     torch.save(X_test, 'data/X_test.pt')
-    print(f"Test data saved to data/X_test.pt")
     
     # Train and evaluate model for each trader
     trader_models = {}
     trader_performances = {}
     
     for trader_name, trades in all_trades.items():
-        print(f"\nTraining model for {trader_name}...")
-        
+        print(f"\nStarting training for {trader_name}...")
         # Create and train model
         trainer = LocalTrainer(input_size=X_train.shape[2])
         model_weights = trainer.train(X_train, y_train, epochs=epochs)
+        print(f"Model trained successfully for {trader_name}.")
         trader_models[trader_name] = model_weights
         
         # Evaluate model
@@ -237,10 +231,22 @@ def main():
         print(f"Precision: {metrics['precision']:.4f}")
         print(f"Recall: {metrics['recall']:.4f}")
         print(f"F1 Score: {metrics['f1']:.4f}")
+        
+        # After training and evaluation
+        print(f"Uploading model weights for {trader_name}...")
+        try:
+            weights_path = f'data/{trader_name}_model_weights1.pth'
+            torch.save(trainer.model.state_dict(), weights_path)
+            print(f"Model weights saved to {weights_path}")
+            cid = upload_model_weights(weights_path)
+            print(f"Model weights uploaded successfully for {trader_name}. CID: {cid}")
+        except Exception as e:
+            print(f"Error during upload for {trader_name}: {e}")
     
     # Aggregate models from all traders
     print("\nAggregating models from all traders...")
     global_weights = aggregate_models(list(trader_models.values()))
+    print("Models aggregated into global model successfully.")
     
     # Create global model and load aggregated weights
     global_model = LocalTrainer(input_size=X_train.shape[2]).model
@@ -251,16 +257,13 @@ def main():
     torch.save(global_model.state_dict(), weights_path)
     print(f"Global model weights saved to {weights_path}")
     
-    # Upload the saved weights using file path
+    # Upload the global model weights
+    print(f"Uploading global model weights...")
     try:
-        cid = upload_model_weights(weights_path)
-        if cid:
-            # Save the CID to a file for future reference
-            with open('data/model_cid.txt', 'w') as f:
-                f.write(cid)
-            print(f"Model CID saved to data/model_cid.txt")
+        global_cid = upload_model_weights(weights_path)
+        print(f"Global model weights uploaded successfully. CID: {global_cid}")
     except Exception as e:
-        print(f"Error during upload: {e}")
+        print(f"Error during upload of global model: {e}")
     
     # Evaluate global model
     print("\nGlobal Model Performance:")
@@ -270,20 +273,6 @@ def main():
     print(f"Recall: {global_metrics['recall']:.4f}")
     print(f"F1 Score: {global_metrics['f1']:.4f}")
     
-    # Analyze predictions on test data
-    with torch.no_grad():
-        test_predictions = global_model(X_test)
-        pred_labels = (test_predictions > 0.5).float()
-        true_labels = y_test
-        
-        correct_predictions = (pred_labels == true_labels).sum().item()
-        incorrect_predictions = (pred_labels != true_labels).sum().item()
-        
-        print("\nPrediction Analysis on Test Data:")
-        print(f"Total test samples: {len(y_test)}")
-        print(f"Correct predictions: {correct_predictions}")
-        print(f"Incorrect predictions: {incorrect_predictions}")
-        print(f"Accuracy: {(correct_predictions / len(y_test)) * 100:.2f}%")
     
     # After evaluating models for each trader
     contributions = {}
@@ -296,12 +285,34 @@ def main():
     contributions_normalized = {k: (v / contribution_sum) * 10 for k, v in contributions.items()}
 
     # Create DataFrame for contributions
-    contribution_df = pd.DataFrame(list(contributions_normalized.items()), columns=['Trader Strategy', 'Contribution'])
+    contribution_df = pd.DataFrame(list(contributions_normalized.items()), columns=['traderAddress', 'contribution'])
 
     # Save contributions to CSV
     contribution_csv_path = 'data/trader_contributions.csv'
     contribution_df.to_csv(contribution_csv_path, index=False)
     print(f"Trader contributions saved to {contribution_csv_path}")
+
+
+    # mock_contributions = [
+    #         {'traderAddress': 'secret1q42qnccxnrgnuy9ge92xs5kuyvxr4gweaa896c', 'contribution': 6.0},
+    #         {'traderAddress': 'secret1vrwne4zmpjnvhcp689j8pqlp8rss722mk72c9j', 'contribution': 4.0},
+    #     ]
+
+    # # Create DataFrame for mock contributions
+    # contribution_df = pd.DataFrame(mock_contributions)
+
+    # Send contributions to Next.js API for each contribution
+    api_url = 'http://localhost:3000/api/recordContribution'
+    
+    for index, row in contribution_df.iterrows():
+        contribution_data = [row.to_dict()]  # Convert the row to a dictionary
+        response = requests.post(api_url, json=contribution_data)
+        
+        if response.status_code == 200:
+            print(f"Contribution for {row['traderAddress']} recorded successfully.")
+        else:
+            print(f"Failed to record contribution for {row['traderAddress']}: {response.text}")
+
 
 if __name__ == "__main__":
     main() 
