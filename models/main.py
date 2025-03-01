@@ -102,10 +102,10 @@ def generate_training_data(df: pd.DataFrame) -> tuple[Dict, Dict]:
     trader_types = {
         'momentum_trader': MomentumTrader,
         'mean_reversion_trader': MeanReversionTrader,
-        'breakout_trader': BreakoutTrader,
-        'trend_following_trader': TrendFollowingTrader,
-        'rsi_trader': RSITrader,
-        'volume_trader': VolumeBasedTrader
+        # 'breakout_trader': BreakoutTrader,
+        # 'trend_following_trader': TrendFollowingTrader,
+        # 'rsi_trader': RSITrader,
+        # 'volume_trader': VolumeBasedTrader
     }
     
     all_trades = {}
@@ -162,7 +162,7 @@ def upload_model_weights(file_path: str, server_url="http://localhost:3000") -> 
 
 def main():
     # Configuration
-    days = 365  # 1 year of data
+    days = 90  # 1 year of data
     sequence_length = 10
     epochs = 30
     

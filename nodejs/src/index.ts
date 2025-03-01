@@ -38,6 +38,7 @@ app.post("/upload", upload.single("file"), async (req: any, res: any) => {
   console.log(`File uploaded and saved to: ${filePath}`); // Log the file path for debugging
 
   const options = {
+    password: 'password',
     onProgress: (progress: number) => {
       console.log(`The upload is completed is ${progress}% completed`);
     },
