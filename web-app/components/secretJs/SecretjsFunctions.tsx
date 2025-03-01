@@ -14,12 +14,15 @@ const SecretjsFunctions = () => {
     secretAddress: "",
   };
 
-  const secretjs = new SecretNetworkClient({
-    chainId: "pulsar-3",
-    url: "https://pulsar.lcd.secretnodes.com",
-    wallet: window.getOfflineSignerOnlyAmino("pulsar-3"),
-    walletAddress: secretAddress,
-  });
+  const secretjs =
+    typeof window !== "undefined" 
+      ? new SecretNetworkClient({
+          chainId: "pulsar-3",
+          url: "https://pulsar.lcd.secretnodes.com",
+          wallet: window.getOfflineSignerOnlyAmino("pulsar-3"),
+          walletAddress: secretAddress,
+        })
+      : null;
 
   let handle_withdraw = async (amount: number) => {
     const wallet = new Wallet(
