@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SecretjsFunctions } from "@/components/secretJs/SecretjsFunctions";
 
 type Message = {
   id: number;
@@ -29,6 +30,8 @@ const AgentChat = ({ logs }: { logs: string[] }) => {
   >("online");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [logIndex, setLogIndex] = useState(0); // Track the current log index
+  const { handle_record_total_profit, handle_query_profit_distribution } =
+    SecretjsFunctions();
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -65,6 +68,49 @@ const AgentChat = ({ logs }: { logs: string[] }) => {
     return () => clearInterval(interval); // Cleanup on unmount
   }, [logs, logIndex]);
 
+  // Function to handle recording total profit
+  const handleRecordTotalProfit = async () => {
+    try {
+      // Extract profit from logs or use a fixed value
+      const totalProfit = 5220.9; // Fixed value for demo
+      console.log("Total profit:", totalProfit);
+
+      // Record the total profit
+      await handle_record_total_profit(totalProfit);
+      console.log("Total profit recorded:", totalProfit);
+
+      // Add a message to indicate profit was recorded
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: prev.length + 1,
+          content: `Total profit of ${totalProfit} SCRT recorded to the contract.`,
+          sender: "agent",
+          timestamp: new Date(),
+        },
+      ]);
+
+      // Query profit distribution after recording total profit
+      setTimeout(async () => {
+        const distributedAmount = await handle_query_profit_distribution();
+        console.log("Profit distribution queried:", distributedAmount);
+
+        // Add a message to show the profit distribution
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: prev.length + 1,
+            content: `Profit distribution calculated: ${distributedAmount} SCRT available for withdrawal.`,
+            sender: "agent",
+            timestamp: new Date(),
+          },
+        ]);
+      }, 2000); // Wait 2 seconds before querying profit distribution
+    } catch (error) {
+      console.error("Error handling profit operations:", error);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
@@ -80,8 +126,23 @@ const AgentChat = ({ logs }: { logs: string[] }) => {
     setInput("");
     setAgentStatus("thinking");
 
+    // Check for the "distribute profit" command
+    if (input.trim().toLowerCase() === "calculate my profit") {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: prev.length + 2,
+          content: "Initiating profit calculation process...",
+          sender: "agent",
+          timestamp: new Date(),
+        },
+      ]);
+      
+      // Call the handleRecordTotalProfit function
+      handleRecordTotalProfit();
+    }
     // Check for the "execute trade" command
-    if (input.trim().toLowerCase() === "execute trade") {
+    else if (input.trim().toLowerCase() === "execute trade") {
       try {
         const response = await fetch("http://127.0.0.1:5000/start-trade", {
           method: "POST",
