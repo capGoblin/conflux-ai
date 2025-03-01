@@ -2,45 +2,167 @@
 
 Conflux-AI harnesses Secret Network, Secret AI, and Autonomys AutoDrive to enable crypto traders to collaboratively train private ML models and drive autonomous trading with transparent profit sharing — ensuring your data stays private while you benefit from collective intelligence.
 
-## ⚠️ The Problem We're Solving
+## 📊 User-Focused Summary
 
-- **Data Privacy & Competitive Security**: Traders risk exposing proprietary strategies when using centralized AI platforms, jeopardizing their competitive edge.
-- **Access to Advanced AI**: Sophisticated AI trading tools are often exclusive to institutions, leaving solo traders without the resources to leverage cutting-edge models.
-- **Inefficient Collaborative Model Development**:
-Without secure, decentralized aggregation, traders can’t combine insights to build stronger AI models, limiting predictive accuracy.
+Conflux-AI allows crypto traders to collaborate on building powerful AI trading models without ever exposing their proprietary strategies or data. As a trader, you simply train a model locally on your own machine, then share only the encrypted model weights (not your data) to contribute to a global AI trading system. The platform's autonomous AI agent uses this collective intelligence to execute trades, and profits are distributed fairly based on how much your model improved the global system's performance.
 
-## 🤖 The Conflux-AI Solution
+With Conflux-AI, you maintain complete privacy while gaining access to the combined trading intelligence of the entire network. The platform handles everything from secure model aggregation to autonomous trading and transparent profit distribution—all without requiring you to reveal your trading secrets or strategies.
 
-Conflux-AI merges decentralized confidential computing, autonomous AI agents, and transparent profit-sharing into a secure, collaborative trading ecosystem:
+## 💼 Investor Pitch
 
-- **Privacy-Preserving AI**: Powered by Secret AI for confidential trading, ensuring sensitive data remains private while AI models operate securely and privately.
-- **Permanent Decentralized Storage**: Autonomys AutoDrive encrypts and stores AI model updates, aggregating local model weights into a global AI model without relying on centralized servers.
-- **On-Chain Profit Distribution**: Secret Network smart contracts calculate and distribute trading profits based on each trader’s contribution to the global model’s accuracy.
+### The Problem
 
-## 🔍 How Conflux-AI Works
+The cryptocurrency trading market faces three critical challenges:
 
-### 1. **Local Model Training & Upload**:
+1. **Data Privacy Dilemma**: Sophisticated traders with valuable strategies are reluctant to participate in collaborative AI systems because doing so typically requires exposing proprietary data and trading algorithms.
 
-Each trader trains a local LSTM model using their historical trading data, enriched with 20+ technical indicators (RSI, MACD, Bollinger Bands, etc.). Raw data never leaves the trader’s device — only encrypted model weights are uploaded securely to AutoDrive.
+2. **Accessibility Gap**: Advanced AI trading tools remain largely inaccessible to individual traders, creating an uneven playing field dominated by institutional players with vast resources.
 
-### 2. **Global Model Aggregation**:
+3. **Inefficient Knowledge Sharing**: Without a secure way to combine trading insights, the market suffers from siloed intelligence, limiting the potential accuracy and robustness of trading models.
 
-The encrypted local model weights are permanently stored on AutoDrive and periodically aggregated using federated averaging. This combines the strategies of all participants into a robust global model. Each trader’s contribution to the model’s accuracy directly impacts their share of profits.
+### Market Opportunity
 
-### 3. **Autonomous AI Trading Agent**:
+The cryptocurrency trading market is massive and growing, with daily trading volumes exceeding $100 billion. AI-powered trading is rapidly gaining traction, with an estimated 80% of trading volume on traditional exchanges already driven by algorithms. However, the intersection of privacy-preserving technology and collaborative AI in trading remains largely untapped.
 
-An AI agent powered by Secret AI’s LLM retrieves the latest global model, processes live market data, and generates trade decisions in natural language — deciding when to "buy," "sell," or "hold". It autonomously executes trades and updates each trader's portfolio daily.
+Conflux-AI targets the growing segment of data-conscious crypto traders who want the benefits of collaborative AI without the risks of exposing their strategies. This includes both individual traders seeking institutional-grade tools and trading firms looking to enhance their models while maintaining competitive secrecy.
 
-### 4. **Profit Distribution**:
+### Our Solution
 
-Secret Network smart contracts transparently distribute trading profits. Each trader’s earnings are proportional to their contribution score — reflecting how much their local model improved the global AI model.
+Conflux-AI solves these challenges through a unique combination of:
 
-## 🔒 Why Conflux-AI is a Game Changer
+- **Privacy-Preserving Federated Learning**: Enables collaboration without data sharing
+- **Decentralized Secure Storage**: Ensures model weights remain encrypted and tamper-proof
+- **Autonomous AI Trading**: Leverages collective intelligence for optimal trading decisions
+- **Smart Contract-Based Profit Distribution**: Rewards contributors fairly based on model improvement
 
-- **Privacy-First**: Your data never leaves your system. Only encrypted model parameters are shared, safeguarding your trading strategies.
-- **Collaborative Intelligence**: By pooling insights from diverse strategies, the global model generates more accurate predictions than any individual approach.
-- **Decentralized & Trustless**: Leveraging Secret Network and AutoDrive, every transaction — from model aggregation to profit distribution — is secure, permanent, and tamper-proof.
-- **Accessible for All**: Conflux-AI democratizes advanced AI trading, giving solo traders access to institutional-grade technology and ensuring fair profit sharing.
+By addressing both the privacy concerns and accessibility barriers in AI trading, Conflux-AI creates a new paradigm where traders can benefit from collective intelligence without compromising their competitive edge.
+
+## 🔧 Development Deep Dive
+
+### Technical Architecture
+
+Conflux-AI's architecture consists of five key components that work together to enable privacy-preserving collaborative AI trading:
+
+#### 1. Local Training Environment
+
+The trader's local environment is where all sensitive data remains. The system uses Python-based components ([`main.py`](https://github.com/capGoblin/conflux-ai/blob/main/models/main.py)) to:
+
+- Process raw trading data and calculate 20+ technical indicators (RSI, MACD, Bollinger Bands, etc.)
+- Train LSTM neural network models on local data
+- Encrypt and prepare model weights for secure sharing
+
+This component ensures that raw trading data never leaves the user's system, preserving strategy privacy.
+
+#### 2. Secure Storage Layer
+
+Built on Autonomys AutoDrive, this layer ([`index.ts`](https://github.com/capGoblin/conflux-ai/blob/main/nodejs/src/index.ts)) handles:
+
+- Secure upload of encrypted model weights
+- Permanent, tamper-proof storage of model versions
+- Retrieval of models for aggregation and trading
+
+The Node.js server provides RESTful endpoints for model upload and download, interfacing with AutoDrive's encrypted storage system.
+
+#### 3. Model Aggregation System
+
+The aggregation system ([`main.py`](https://github.com/capGoblin/conflux-ai/blob/main/models/main.py)) implements federated learning to:
+
+- Combine multiple trader models into a robust global model
+- Calculate contribution scores based on model performance
+- Generate the global model used by the trading agent
+
+This component uses weighted averaging techniques to ensure that higher-performing models have more influence on the final global model.
+
+#### 4. Trading Agent
+
+The autonomous trading agent ([`agent.py`](https://github.com/capGoblin/conflux-ai/blob/main/models/agent.py) and [`server.py`](https://github.com/capGoblin/conflux-ai/blob/main/models/server.py)) combines:
+
+- The global LSTM model for price movement prediction
+- Secret AI's LLM for decision-making and trade execution
+- A Flask server for monitoring and logging
+
+The agent processes market data, generates trading signals, and executes buy/sell decisions autonomously, with all actions logged for transparency.
+
+#### 5. Smart Contract Layer
+
+Built on Secret Network ([`contract.rs`](https://github.com/capGoblin/conflux-ai/blob/main/contract/src/contract.rs) and [`SecretjsFunctions.tsx`](https://github.com/capGoblin/conflux-ai/blob/main/web-app/components/secretJs/SecretjsFunctions.tsx)), this layer:
+
+- Records trader contribution scores
+- Manages deposit and profit distribution
+- Stores references to the global model
+- Handles secure withdrawal of profits
+
+The smart contracts ensure transparent and fair profit distribution proportional to each trader's contribution to the global model's performance.
+
+### Contract and Function Interactions
+
+The system's workflow follows these key interactions:
+
+1. **Model Training and Upload**:
+
+   - Traders train local models using [`main.py`](https://github.com/capGoblin/conflux-ai/blob/main/models/main.py)
+   - Encrypted weights are uploaded via the Node.js server ([`index.ts`](https://github.com/capGoblin/conflux-ai/blob/main/nodejs/src/index.ts))
+   - The server returns a CID (Content Identifier) for the stored model
+
+2. **Global Model Aggregation**:
+
+   - [`main.py`](https://github.com/capGoblin/conflux-ai/blob/main/models/main.py) retrieves multiple models and performs federated averaging
+   - Contribution scores are calculated based on model performance
+   - The global model is uploaded and its CID is recorded
+
+3. **Smart Contract Registration**:
+
+   - Users deposit funds using [`SecretjsFunctions.tsx`](https://github.com/capGoblin/conflux-ai/blob/main/web-app/components/secretJs/SecretjsFunctions.tsx)
+   - The global model CID is registered on-chain via [`contract.rs`](https://github.com/capGoblin/conflux-ai/blob/main/contract/src/contract.rs)
+   - Contribution scores are recorded for each participating trader
+
+4. **Autonomous Trading**:
+
+   - The trading agent ([`agent.py`](https://github.com/capGoblin/conflux-ai/blob/main/models/agent.py)) downloads the global model
+   - Market data is processed and fed into the model
+   - Secret AI LLM generates trading decisions
+   - Trades are executed and results are logged
+
+5. **Profit Distribution**:
+   - Trading profits are recorded on-chain
+   - Smart contracts calculate each trader's share based on contribution scores
+   - Traders can withdraw their profits through the web interface
+
+This architecture ensures that sensitive data remains private while enabling collaborative AI and fair profit sharing in a trustless environment.
+
+### Key Design Decisions
+
+#### Privacy-First Architecture
+
+We made a fundamental decision to keep all raw data local and only share encrypted model weights. This approach:
+
+- Protects proprietary trading strategies
+- Reduces regulatory concerns around data sharing
+- Enables participation from institutional traders with strict data policies
+
+#### Federated Learning vs. Centralized Models
+
+We chose federated learning over centralized model training because:
+
+- It eliminates the need for a trusted central party
+- It allows for diverse trading strategies to contribute to a robust global model
+- It enables fair attribution of contribution for profit sharing
+
+#### Secret AI Integration
+
+Incorporating Secret AI's LLM for decision-making provides:
+
+- Natural language reasoning about trading decisions
+- Ability to explain trading logic in human-readable format
+- Enhanced decision-making beyond pure statistical models
+
+#### Smart Contract-Based Profit Distribution
+
+We implemented on-chain profit distribution to ensure:
+
+- Transparent calculation of trader contributions
+- Tamper-proof record of profit allocation
+- Trustless withdrawal mechanism
 
 ## 🏛️ Architecture
 
