@@ -84,7 +84,7 @@ export default function ConfluxAI() {
 
   useEffect(() => {
     fetchContributionScore();
-    fetchWithdrawAmount();
+    // fetchWithdrawAmount();
     const interval = setInterval(() => {
       fetchLogs();
     }, 1000); // Fetch logs every second
@@ -240,7 +240,10 @@ export default function ConfluxAI() {
                     <CardTitle className="text-zinc-100">AI Agent</CardTitle>
                   </CardHeader>
                   <CardContent className="h-[300px]">
-                    <AgentChat logs={logs} />
+                    <AgentChat
+                      logs={logs}
+                      setWithdrawAmount={setWithdrawAmount}
+                    />
                   </CardContent>
                 </Card>
               </div>
@@ -301,7 +304,7 @@ export default function ConfluxAI() {
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <AgentChat logs={logs} />
+          <AgentChat logs={logs} setWithdrawAmount={setWithdrawAmount} />
         </div>
       </div>
     </div>

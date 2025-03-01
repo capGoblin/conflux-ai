@@ -15,7 +15,12 @@ type Message = {
   timestamp: Date;
 };
 
-const AgentChat = ({ logs }: { logs: string[] }) => {
+interface AgentChatProps {
+  logs: string[];
+  setWithdrawAmount?: (amount: number) => void;
+}
+
+const AgentChat = ({ logs, setWithdrawAmount }: AgentChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -30,6 +35,7 @@ const AgentChat = ({ logs }: { logs: string[] }) => {
   >("online");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [logIndex, setLogIndex] = useState(0); // Track the current log index
+  const [allLogsDisplayed, setAllLogsDisplayed] = useState(false); // Track if all logs have been displayed
   const { handle_record_total_profit, handle_query_profit_distribution } =
     SecretjsFunctions();
 
@@ -62,11 +68,16 @@ const AgentChat = ({ logs }: { logs: string[] }) => {
         setLogIndex((prev) => prev + 1); // Move to the next log
       } else {
         clearInterval(interval); // Clear the interval when all logs are added
+        if (logs.length > 0 && logIndex >= logs.length && !allLogsDisplayed) {
+          setAllLogsDisplayed(true);
+          // Call handle_record_total_profit after all logs are displayed
+          handleRecordTotalProfit();
+        }
       }
     }, 200); // Adjust the delay as needed
 
     return () => clearInterval(interval); // Cleanup on unmount
-  }, [logs, logIndex]);
+  }, [logs, logIndex, allLogsDisplayed]);
 
   // Function to handle recording total profit
   const handleRecordTotalProfit = async () => {
@@ -94,6 +105,11 @@ const AgentChat = ({ logs }: { logs: string[] }) => {
       setTimeout(async () => {
         const distributedAmount = await handle_query_profit_distribution();
         console.log("Profit distribution queried:", distributedAmount);
+
+        // Update the withdraw amount in the parent component
+        if (setWithdrawAmount) {
+          setWithdrawAmount(distributedAmount);
+        }
 
         // Add a message to show the profit distribution
         setMessages((prev) => [
@@ -137,7 +153,7 @@ const AgentChat = ({ logs }: { logs: string[] }) => {
           timestamp: new Date(),
         },
       ]);
-      
+
       // Call the handleRecordTotalProfit function
       handleRecordTotalProfit();
     }
@@ -164,6 +180,7 @@ const AgentChat = ({ logs }: { logs: string[] }) => {
           const logsResponse = await fetch("http://127.0.0.1:5000/logs");
           const logsData = await logsResponse.json();
           setLogIndex(0); // Reset log index to start from the beginning
+          setAllLogsDisplayed(false); // Reset allLogsDisplayed flag
           // No need to clear displayed logs here, as we are adding them sequentially
         } else {
           throw new Error("Failed to start trade execution.");
