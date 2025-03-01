@@ -95,7 +95,7 @@ const AgentChat = ({ logs, setWithdrawAmount }: AgentChatProps) => {
         ...prev,
         {
           id: prev.length + 1,
-          content: `Total profit of ${totalProfit} SCRT recorded to the contract.`,
+          content: `Total profit of ${totalProfit} USCRT recorded to the contract.`,
           sender: "agent",
           timestamp: new Date(),
         },
@@ -116,7 +116,7 @@ const AgentChat = ({ logs, setWithdrawAmount }: AgentChatProps) => {
           ...prev,
           {
             id: prev.length + 1,
-            content: `Profit distribution calculated: ${distributedAmount} SCRT available for withdrawal.`,
+            content: `Profit distribution calculated: ${distributedAmount} USCRT available for withdrawal.`,
             sender: "agent",
             timestamp: new Date(),
           },

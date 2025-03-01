@@ -40,6 +40,7 @@ export default function ConfluxAI() {
     handle_deposit,
     handle_query_contribution_score,
     handle_query_profit_distribution,
+    handle_withdraw,
   } = SecretjsFunctions();
   const { secretAddress } = useContext(SecretjsContext) || {
     secretAddress: "",
@@ -49,6 +50,7 @@ export default function ConfluxAI() {
   const [contributionScore, setContributionScore] = useState(0);
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const handleUpdate = async () => {
     await handle_set_global_model_cid(cid);
@@ -59,6 +61,29 @@ export default function ConfluxAI() {
   const handleDeposit = async () => {
     await handle_deposit(amount);
     toast.success("Deposit successful!");
+  };
+
+  const handleWithdraw = async () => {
+    if (withdrawAmount <= 0) {
+      toast.error("No funds available for withdrawal");
+      return;
+    }
+
+    setIsWithdrawing(true);
+    try {
+      const result = await handle_withdraw(withdrawAmount);
+      if (result && result.success) {
+        toast.success(result.message);
+        setWithdrawAmount(0); // Reset withdraw amount after successful withdrawal
+      } else {
+        toast.error(result?.message || "Withdrawal failed");
+      }
+    } catch (error) {
+      console.error("Error during withdrawal:", error);
+      toast.error("Withdrawal failed. Please try again.");
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   const fetchContributionScore = async () => {
@@ -188,10 +213,10 @@ export default function ConfluxAI() {
                           </div>
                           <Select>
                             <SelectTrigger className="w-[120px] bg-zinc-900 border-zinc-800 text-zinc-100">
-                              <SelectValue placeholder="SCRT" />
+                              <SelectValue placeholder="USCRT" />
                             </SelectTrigger>
                             <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
-                              <SelectItem value="scrt">SCRT</SelectItem>
+                              <SelectItem value="uscrt">USCRT</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -221,11 +246,15 @@ export default function ConfluxAI() {
                             Available profit:
                           </span>
                           <span className="text-xl font-semibold text-indigo-400">
-                            {withdrawAmount} SCRT
+                            {withdrawAmount} USCRT
                           </span>
                         </div>
-                        <Button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white">
-                          Withdraw
+                        <Button
+                          className="w-full bg-zinc-800 hover:bg-zinc-700 text-white"
+                          onClick={handleWithdraw}
+                          disabled={isWithdrawing || withdrawAmount <= 0}
+                        >
+                          {isWithdrawing ? "Processing..." : "Withdraw"}
                         </Button>
                       </div>
                     </div>
