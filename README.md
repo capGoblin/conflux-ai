@@ -244,6 +244,73 @@ graph TB
     class NodeJSServer,FlaskServer,WebUI,SecretjsFunctions serviceComponent
 ```
 
+## 🛠️ Setup & Running Guide
+
+### Prerequisites
+
+1. **Node.js** (v16 or higher)
+2. **Conda** (Miniconda or Anaconda)
+3. **Keplr Wallet** browser extension
+4. **AutoDrive API Key** (for secure storage)
+5. **Secret Network Account** with testnet SCRT tokens
+
+### Step-by-Step Setup & Running
+
+1. **Clone Repository**
+
+   ```bash
+   git clone https://github.com/capGoblin/conflux-ai.git
+   cd conflux-ai
+   ```
+
+2. **Setup Node.js Server**
+
+   ```bash
+   # Setup Node.js server
+   cd path/to/conflux-ai/nodejs
+   touch .env
+   echo "AUTO_DRIVE_API_KEY=your_api_key_here" >> .env
+   npm install
+
+   # Start Node.js server
+   npm start
+   ```
+
+3. **Setup & Start Web Application**
+
+   ```bash
+   cd path/to/conflux-ai/web-app
+   npm install
+
+   # Start web app
+   npm run dev
+   ```
+
+4. **Setup Python Environment & Run Model**
+
+   ```bash
+   # Open a new terminal
+   cd path/to/conflux-ai/models
+
+   # Create and activate Conda environment
+   conda create -n secret-ai-trading-agent python=3.12
+   conda activate secret-ai-trading-agent
+
+   # Install dependencies
+   pip install -r requirements.txt
+   pip install 'secret-sdk>=1.8.1'
+   pip install secret-ai-sdk
+
+   # Set Secret AI API key
+   export SECRET_AI_API_KEY=bWFzdGVyQHNjcnRsYWJzLmNvbTpTZWNyZXROZXR3b3JrTWFzdGVyS2V5X18yMDI1
+
+   # To train the local model
+   python main.py
+
+   # To start the trading agent server
+   python server.py  # Note: Update the path to agent.py in server.py before running
+   ```
+
 ## 🚀 TL;DR
 
 Conflux-AI empowers crypto traders to collaboratively train decentralized, private machine learning models that drive autonomous trading — without ever exposing your sensitive data.
