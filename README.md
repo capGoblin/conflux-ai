@@ -273,7 +273,7 @@ graph TB
    npm install
 
    # Start Node.js server
-   npm start
+   npm run dev
    ```
 
 3. **Setup & Start Web Application**
